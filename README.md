@@ -1,6 +1,5 @@
 # Predicting Diamond Prices Using Regression Analysis
 
-## Project Overview
 This project focuses on building a predictive model to estimate diamond prices using regression analysis. The goal is to assist both buyers and sellers in determining the appropriate price for diamonds based on specific attributes such as carat, color, and clarity. The analysis leverages publicly available data and applies data science techniques to create an accurate and robust model.
 
 ## Dataset
