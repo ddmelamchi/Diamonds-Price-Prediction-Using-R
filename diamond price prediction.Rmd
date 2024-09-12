@@ -1,0 +1,786 @@
+---
+title: '\normalsize \textbf{Predicting Diamond Prices Using Regression Analysis on Fair-Cut Diamonds}'
+author: '\small Deepak Dulal'
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r get-labels, echo = FALSE}
+labs = knitr::all_labels()
+labs = setdiff(labs, c("setup", "get-labels"))
+```
+
+# Section 1: Introduction
+
+#### Objective
+
+The primary aim of this project is to develop a predictive model for diamond prices, leveraging various physical and quality attributes of the diamonds. This model is intended to assist both buyers and sellers by establishing a transparent pricing mechanism that reflects the intrinsic qualities of the diamonds. The data for this analysis has been compiled by Karnika Kapoor and is publicly available on Kaggle.
+
+#### Data Description
+
+Our dataset contains detailed records of approximately 53,000 diamonds, encompassing attributes such as carat weight, color, clarity, and physical dimensions (length x, width y, and depth z). For the purpose of focused analysis, we have narrowed our study to a subset of 1,610 diamonds classified with a "Fair" cut quality. This subset allows us to scrutinize the impact of specified attributes on the pricing within this particular cut category, providing insights that are applicable to a significant segment of the diamond market.
+
+#### Exploratory Data Analysis (EDA)
+
+The overarching question guiding this project is: How well can we predict the price of a diamond based on its attributes? This question reflects the broader goal of the model, which is to provide a reliable tool for estimating diamond prices. By developing a robust predictive model, we aim to demystify diamond pricing and offer a valuable resource for market participants. The success of our model will be measured by its accuracy in predicting prices and its ability to handle the complex interplay of factors that determine a diamond's value.
+
+In summary, this introduction sets the stage for a thorough investigation into the determinants of diamond pricing, laying the groundwork for the development of a predictive model that could revolutionize how stakeholders engage with the diamond market.
+
+Our initial exploratory data analysis (EDA) has been instrumental in identifying key trends and relationships within the data. Notably, the price distribution of diamonds is right-skewed, which suggests that while most diamonds are priced within a lower range, the higher-priced diamonds are comparatively rare. This skewness in price distribution warrants the application of models that can adeptly handle outliers and non-linearity.
+
+One of the most compelling findings from our EDA is the strong positive correlation between the carat (weight) of a diamond and its price. This relationship is intuitive, as larger diamonds are rarer and thus command higher prices. Scatter plots and regression analysis further substantiate that carat weight is a powerful predictor of diamond price.
+
+Additionally, our analysis has begun to uncover the nuanced effects of color and clarity on diamond pricing. These attributes, while categorical, exhibit a varied influence on price, suggesting that different grades significantly affect the market value of diamonds. The EDA includes detailed visualizations such as histograms and box plots that illustrate these relationships, highlighting both the typical values and the outliers.
+
+```{r, echo=FALSE, eval=TRUE}
+diamonds = read.csv("final_diamonds.csv")  
+head(diamonds, 10)
+```
+
+# Section 2: *Regression Analysis*
+
+*Data Preparation:* The data required cleaning to handle missing values and errors. Categorical variables such as color and clarity were transformed into numerical factors suitable for regression analysis.
+
+In navigating the challenge of dataset selection for our project, we opted to refine our focus from a vast pool of around 53,000 entries to a more manageable subset of approximately 1,600 observations. This subset, characterized by the “Fair” designation within the “Quality of Cut” category, strikes a balance between dataset size and analytical depth. Despite the reduction in dataset scale, we retained a robust set of nine predictors, excluding the serial number and response variable. This targeted approach ensures a solid foundation for our analysis, allowing for focused exploration of the relationship between predictor variables and diamond price. We remain receptive to feedback and open to refining our approach to ensure the efficacy and relevance of our analysis.
+
+to be added: there is no missing value and considering color and clarity as a categorical value.
+
+## Histogram of diamonds diamonds\$price
+
+```{r, echo=FALSE, eval=TRUE}
+hist(diamonds$price, xlab='diamonds$price',ylab='Count',main='Histogram for diamonds diamonds$price',breaks=45,col='gray',cex.main = 0.8, xaxt='n')
+# Customize x-axis labels
+axis(side=1, at=seq(0, max(diamonds$price) + 1000, by=1000), labels=paste0(seq(0, max(diamonds$price) + 1000, by=1000) / 1000, "K"))
+```
+
+The histogram displays a right-skewed distribution of diamonds diamonds$prices, with the bulk of diamonds falling within a lower diamonds$price range. As the diamonds$price increases, the frequency of diamonds decreases, indicating that high-diamonds$priced diamonds are comparatively rare.
+
+## Converting Categorical Values as factor for R
+
+```{r, echo=FALSE, eval=TRUE}
+diamonds$clarity=as.factor(diamonds$clarity)
+diamonds$color=as.factor(diamonds$color)
+```
+
+## Box Plot for diamonds\$price
+
+```{r, echo=FALSE, eval=TRUE}
+boxplot(diamonds$price, col='grey', main='Box plot for diamonds diamonds$price', horizontal=TRUE, cex.main=0.75, xaxt='n')
+axis(side=1, at=seq(0, max(diamonds$price) + 1000, by=1000), labels=paste0(seq(0, max(diamonds$price) + 1000, by=1000) / 1000, "K"))
+```
+
+The box plot illustrates the diamonds\$price distribution of diamonds, with a central box representing the interquartile range where the middle 50% of the diamonds\$prices lie. The median diamonds\$price is indicated by a line within the box, slightly above the \\\$3,000 mark, which divides the diamondset into two equal halves in terms of diamonds\$price. Whiskers extend from the box to the highest and lowest diamonds\$prices that are still within 1.5 times the interquartile range, while individual points beyond these whiskers are labeled as outliers, signifying diamonds\$prices that are unusually high or low. This plot reveals a right-skewed distribution, evidenced by a longer right whisker and several high-diamonds\$priced outliers, indicating that a selection of diamonds has diamonds\$prices considerably higher than the general collection.
+
+## Scatter Plot for Response Vs Each Predictor
+
+```{r, echo=FALSE, eval=TRUE}
+# Plotting relationship between each predictor and the response variable 'diamonds$price', including regression lines
+
+# Plotting 'carat' vs. 'diamonds$price' with regression line
+plot(diamonds$carat, diamonds$price, xlab = 'Carat', ylab = 'diamonds$price', main = 'Comparison of Carat vs. diamonds$price', col = 2, cex = 1)
+abline(lm(diamonds$price ~ diamonds$carat), col = "blue")
+
+# Plotting 'depth' vs. 'diamonds$price' with regression line
+plot(diamonds$depth, diamonds$price, xlab = 'Depth', ylab = 'diamonds$price', main = 'Comparison of Depth vs. diamonds$price', col = 2, cex = 1)
+abline(lm(diamonds$price ~ diamonds$depth), col = "blue")
+
+# Plotting 'table' vs. 'diamonds$price' with regression line
+plot(diamonds$table, diamonds$price, xlab = 'Table', ylab = 'diamonds$price', main = 'Comparison of Table vs. diamonds$price', col = 2, cex = 1)
+abline(lm(diamonds$price ~ diamonds$table), col = "blue")
+
+# Plotting 'x' vs. 'diamonds$price' with regression line
+plot(diamonds$x, diamonds$price, xlab = 'X', ylab = 'diamonds$price', main = 'Comparison of X vs. diamonds$price', col = 2, cex = 1)
+abline(lm(diamonds$price ~ diamonds$x), col = "blue")
+
+# Plotting 'y' vs. 'diamonds$price' with regression line
+plot(diamonds$y, diamonds$price, xlab = 'Y', ylab = 'diamonds$price', main = 'Comparison of Y vs. diamonds$price', col = 2, cex = 1)
+abline(lm(diamonds$price ~ diamonds$y), col = "blue")
+
+# Plotting 'z' vs. 'diamonds$price' with regression line
+plot(diamonds$z, diamonds$price, xlab = 'Z', ylab = 'diamonds$price', main = 'Comparison of Z vs. diamonds$price', col = 2, cex = 1)
+abline(lm(diamonds$price ~ diamonds$z), col = "blue")
+```
+
+### Box Plot for Categorical Predictors
+
+```{r, echo=FALSE, eval=TRUE}
+library("ggplot2")
+# Boxplot of price by color
+ggplot(diamonds, aes(x = color, y = price, fill = color)) +
+  geom_boxplot() +
+  xlab("Color") +
+  ylab("Price") +
+  ggtitle("Boxplot of Price by Diamond Color") +
+  theme_minimal()
+```
+
+```{r, echo=FALSE, eval=TRUE}
+# Boxplot of price by clarity
+ggplot(diamonds, aes(x = clarity, y = price, fill = clarity)) +
+  geom_boxplot() +
+  xlab("Clarity") +
+  ylab("Price") +
+  ggtitle("Boxplot of Price by Diamond Clarity") +
+  theme_minimal()
+```
+
+1\. Carat vs.price: A strong positive relationship; diamonds\$price increases with carat size. The regression line clearly shows this upward trend.
+
+2\. Depth vs. price: Generally a weak relationship; diamonds\$prices do not vary significantly with changes in depth. The regression line will likely be relatively flat.
+
+3\. Table vs. diamonds\$price: Also shows a weak relationship. The regression line might show slight positive or negative slope depending on the diamonds spread.
+
+4\. X vs. diamonds$price: Similar to carat, a strong positive relationship; as the length of the diamonds increases, so does the diamonds$price.
+
+5.  Y vs. diamonds$price: As with 'x', a strong positive correlation. Larger widths correlate with higher diamonds$prices.
+
+6\. Z vs. diamonds\$price: Positive relationship, though generally weaker than 'x' and 'y'.
+
+While Color and Clarity are the categorical values, as there are several categorical values, We observed that:
+
+Clarity vs. diamonds$price: Clarity, when encoded numerically, shows a pattern where higher numeric values (better clarity) could correlate with higher diamonds$prices.
+
+Color vs. diamonds$price: Typically, lower numeric values (closer to colorless) result in higher diamonds$prices, indicating a potentially inverse relationship if color is numerically coded from best to worst.
+
+## Model Selection Process
+
+The selection of the final model was guided by both AIC and BIC criteria, which helped in identifying the most significant predictors and eliminating overfitting. Multicollinearity was assessed using Variance Inflation Factor (VIF) scores, leading to the removal of highly correlated predictors to improve model stability.
+
+## MLR
+
+```{r, echo=FALSE, eval=TRUE}
+
+is.factor(diamonds$color)
+is.factor(diamonds$clarity)
+
+# Fit a multiple linear regression model
+model <- lm(price ~ carat + color + clarity + x + y + z + depth + table, data = diamonds)
+
+# Print the summary of the model
+summary(model)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+
+full_OLS_model <- lm(price ~ ., data = diamonds)
+summary(full_OLS_model)
+```
+
+```{r define-functions, include=FALSE}
+calc_loocv_rmse = function(model) {
+  sqrt(mean((resid(model) / (1 - hatvalues(model))) ^ 2))
+}
+```
+
+### AIC Forward Selection
+
+```{r, echo=FALSE, eval=TRUE}
+#data(diamonds)
+# forward selection with AIC
+mod_start = lm(price ~ 1, data = diamonds)
+mod_forwd_aic = step(mod_start, scope = price ~ carat + color + clarity + depth + table + x + y + z,
+direction = 'forward', trace = 0)
+coef(mod_forwd_aic)
+
+```
+
+```{r echo=FALSE,eval=TRUE}
+calc_loocv_rmse(mod_forwd_aic)
+```
+
+### BIC Forward Selection
+
+```{r, echo=FALSE, eval=TRUE}
+# forward selection with BIC
+n = nrow(diamonds)
+mod_forwd_bic = step(mod_start, scope = price ~ carat + color + clarity + depth + table + x + y + z,
+direction = 'forward', k = log(n), trace = 0)
+coef(mod_forwd_bic)
+```
+
+```{r echo=FALSE,eval=TRUE}
+calc_loocv_rmse(mod_forwd_bic)
+```
+
+### AIC backward selection
+
+```{r, echo=FALSE, eval=TRUE}
+## AIC backward selection
+mod_start = lm(price ~ ., data = diamonds)
+mod_backwd_aic = step(mod_start, direction = 'backward', trace = 0)
+coef(mod_backwd_aic)
+```
+
+```{r echo=FALSE,eval=TRUE}
+calc_loocv_rmse(mod_backwd_aic)
+```
+
+### BIC backward selection
+
+```{r, echo=FALSE, eval=TRUE}
+## BIC backward selection
+mod_backwd_bic = step(mod_start, direction = 'backward', k = log(n), trace = 0)
+coef(mod_backwd_bic)
+```
+
+```{r echo=FALSE,eval=TRUE}
+calc_loocv_rmse(mod_backwd_bic)
+```
+
+### AIC stepwise selection
+
+```{r, echo=FALSE, eval=TRUE}
+## AIC stepwise selection
+mod_start = lm(price ~ 1, data = diamonds)
+mod_step_aic = step(mod_start,
+scope = price ~ carat + color + clarity + depth + table + x + y + z,
+direction = 'both', trace = 0)
+coef(mod_step_aic)
+```
+
+```{r echo=FALSE,eval=TRUE}
+calc_loocv_rmse(mod_step_aic)
+```
+
+### BIC stepwise selection
+
+```{r, echo=FALSE, eval=TRUE}
+## BIC stepwise selection
+mod_step_bic = step(mod_start,
+scope = price ~ carat + color + clarity + depth + table + x + y + z,
+direction = 'both', k = log(n), trace = 0)
+coef(mod_step_bic)
+```
+
+```{r echo=FALSE,eval=TRUE}
+calc_loocv_rmse(mod_step_bic)
+```
+
+### Best Subset Selection
+
+```{r, echo=FALSE, eval=TRUE}
+library(leaps)
+
+## run best subsets selection
+mod_subsets = summary(regsubsets(price ~ ., data = diamonds))
+coef_names = colnames(mod_subsets$which)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+## coeficients of the best model using adjusted R2
+best_r2_ind = which.max(mod_subsets$adjr2)
+coef_names[mod_subsets$which[best_r2_ind, ]]
+```
+
+```{r echo=FALSE,eval=TRUE}
+mod_exh_r2<-lm(price ~ carat + color + clarity, data=diamonds)
+calc_loocv_rmse(mod_exh_r2)
+```
+
+Best Adjusted R2 Model includes: carat, color, and clarity predictors and RMSE value is 1371.96.
+
+```{r, echo=FALSE, eval=TRUE}
+## best model using AIC
+p = ncol(mod_subsets$which)
+mod_aic = n * log(mod_subsets$rss / n) + 2 * (2:p)
+best_aic_ind = which.min(mod_aic)
+coef_names[mod_subsets$which[best_aic_ind, ]]
+```
+
+```{r echo=FALSE,eval=TRUE}
+mod_exh_aic<-lm(price ~ carat + color + clarity, data=diamonds)
+calc_loocv_rmse(mod_exh_aic)
+```
+
+Best AIC Model includes: carat, color, and clarity predictors and RMSE value is 1371.96.
+
+```{r, echo=FALSE, eval=TRUE}
+## best model using BIC
+mod_bic = n * log(mod_subsets$rss / n) + log(n) * (2:p)
+best_bic_ind = which.min(mod_bic)
+coef_names[mod_subsets$which[best_bic_ind, ]]
+```
+
+```{r echo=FALSE,eval=TRUE}
+mod_exh_bic<-lm(price ~ carat + color + clarity, data=diamonds)
+calc_loocv_rmse(mod_exh_bic)
+```
+
+Best BIC Model includes: carat, color, and clarity predictors and RMSE value is 1371.96.
+
+### Evaluation
+
+| **Criterion & Search method** | **\$\\text{RMSE}\_\\text{LOOCV}\$** | **Variables Included**                                                                                                                        |
+|-------------------------------|-------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| Forward AIC model             | 1365.982                            | carat, clarityIF, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2, colorE, colorF, colorG, colorH, colorI, colorJ, x |
+| Forward BIC model             | 1365.982                            | carat, clarityIF, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2, colorE, colorF, colorG, colorH, colorI, colorJ, x |
+| Backward AIC model            | 1365.982                            | carat, colorE, colorF, colorG, colorH, colorI, colorJ, clarityIF, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2, x |
+| Backward BIC model            | 1365.982                            | carat, colorE, colorF, colorG, colorH, colorI, colorJ, clarityIF, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2, x |
+| Stepwise AIC model            | 1365.982                            | carat, clarityIF, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2, colorE, colorF, colorG, colorH, colorI, colorJ, x |
+| Stepwise BIC model            | 1365.982                            | carat, clarityIF, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2, colorE, colorF, colorG, colorH, colorI, colorJ, x |
+| Best model using AIC          | 1371.926                            | carat, colorJ, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2                                                       |
+| Best model using BIC          | 1371.926                            | carat, colorJ, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2                                                       |
+| Best Model using Adjusted R2  | 1371.926                            | carat, colorJ, claritySI1, claritySI2, clarityVS1, clarityVS2, clarityVVS1, clarityVVS2                                                       |
+
+Considering the outcomes above, our preference leans towards the model with the lowest Root Mean Squared Error (RMSE). This choice is motivated by the desire to have a model that exhibits better overall accuracy in predicting price , as indicated by the minimized RMSE.
+
+**Model 1 (Selected Model): price \~ carat+color+clarity+x**
+
+From 3 of the selection criterion AIC, BIC, and Stepwise, Best model includes, carat, color, clarity and x as the predictors, while only 1 best subset selection criterion doesn't includes a additional predictors than other criterion. i.e. "x".
+
+**Model 2: price \~ carat+color+clarity**
+
+To know if Selected model is the Good One, we compared the available 2 model with another quality criterion. i.e. Leave-One-Out Cross Validation and enlisted LOOCV RMSE value in the table above and we select the Model-1 as the best model.
+
+The selected model comprises relevant predictors, such as carat, color, clarity and x reflecting a robust approach to capturing the underlying relationships in our data. ( price \~ carat + color + clarity +x).
+
+```{r eval = FALSE, echo=FALSE}
+model<-lm(price ~ carat + color + clarity+x, data=diamonds)
+summary(model)
+```
+
+It can be observed that, R2= 0.8576, concluding 85.76 % variability in the diamonds price is explained by the independent variables (carat, color, clarity, and x) included in the model.
+
+*Final Model Description:* The chosen model includes carat, color, clarity, and dimensions (x, y, z) as predictors. This model was selected based on its balance of complexity and predictive accuracy, achieving an adjusted R-squared value indicative of a strong fit.
+
+*Model Diagnostics:* Diagnostic checks revealed some concerns with normality and homoscedasticity, as indicated by residual plots and the Shapiro-Wilk test. Efforts to transform the response variable and apply robust regression techniques were made to address these issues.
+
+## Model Diagnostics
+
+We now want to see if the LINE assumptions are violated. \### Linearity: Visual (Partial Regression Plot)
+
+```{r, echo=FALSE, eval=TRUE}
+library(olsrr)
+ols_plot_added_variable(model)
+```
+
+From these plots it appears that there is a linear relationship between price and carat, removing the effects of the other predictors. We can't say same for other predictors but it is observed that for different categorical values of color and clarity, linear relationship could be observed.
+
+### Fitted Vs Residuals Plot
+
+```{r, echo=FALSE, eval=TRUE}
+library(olsrr)
+
+ols_plot_resid_fit(model)
+```
+
+From the above plot we can say that, Data Points are not centered at zero and doesn't spread about non-zero. So we can conlude that It violates both Linearity and Constant Variance assumptions.
+
+### Normality Test: Q-Q Plot
+
+```{r, echo=FALSE, eval=TRUE}
+ols_plot_resid_qq(model)
+```
+
+In this model, Q-Q plot does not look good. It can be observed that at the small and large quantiles, the points do not follow the line closely at all. So, we can conclude that the errors are not normally distributed.
+
+### UNUSUAL Observation
+
+#### High Leverage Points
+
+```{r, echo=FALSE, eval=TRUE}
+leverage_points=which(hatvalues(model) > 2 * mean(hatvalues(model)))
+leverage_points
+```
+
+Above is the list of high leverage points. High leverage points may or may not have a large effect on the model. It can be good or bad.
+
+#### Outlier Test
+
+```{r, echo=FALSE, eval=TRUE}
+# function that returns the Bonferroni corrected critical value
+outlier_test_cutoff = function(model, alpha = 0.05) {
+n = length(resid(model))
+qt(alpha/(2 * n), df = df.residual(model) - 1, lower.tail = FALSE)
+}
+# vector of indices for observations deemed outliers.
+cutoff = outlier_test_cutoff(model, alpha = 0.05)
+outlierss_points=which(abs(rstudent(model)) > cutoff)
+```
+
+Above is the list of outliers.
+
+#### Influential Observations
+
+```{r, echo=FALSE, eval=TRUE}
+n = length(resid(model))
+
+which( cooks.distance(model) <= 4 / length(cooks.distance(model)))
+influential_points=which(cooks.distance(model) > 4/n)
+influential_points
+
+nobs(model)
+```
+
+Above is the list of high influential points.
+
+### Normality after Removing High Influential Points
+
+#### Normality: Shapiro Will test
+
+We are just checking to see if we could delete some high influential points from the model and fix the normality issues.
+
+```{r, echo=FALSE, eval=TRUE}
+
+noninfluential_ids = which(
+    cooks.distance(model) <= 4 / length(cooks.distance(model)))
+
+# fit the model on non-influential subset
+model_fix = lm(price ~ carat+color+clarity+x ,
+               data = diamonds,
+               subset = noninfluential_ids)
+refined_model=model_fix
+
+# return coefficients
+summary(model_fix)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+shapiro.test(resid(model_fix))
+```
+
+#### Q-Q Plot
+
+```{r, echo=FALSE, eval=TRUE}
+ols_plot_resid_qq(model_fix)
+```
+
+From Both test even after removing High Influential Points, It can ve seen that Normality assumptions violations still persists.
+
+In a nutshell, Removing the influential observations doesn't fix the issues of Normality Assumptions Violation.
+
+```{r, echo=FALSE, eval=TRUE}
+#Before Moving on, now we are deleting high influential points as they may create problem in the future so.
+
+refined_data = diamonds[noninfluential_ids, ]
+
+#refined_data or we are always using diamonds as the data name so we are going to rename it as diamonds again for ease...
+
+diamonds=refined_data
+diamonds
+```
+
+\
+
+## Collinearity
+
+Collinearity decreases the power of the hypothesis test – the probability of correctly detecting a non-zero coefficient.
+
+We already removed the few predictors before while selecting the best model for prediction and we're mainly focused on prediction.
+
+```{r, echo=FALSE, eval=TRUE}
+
+library(dplyr)
+
+# Create a data frame with the response `price` and other specified columns removed
+#price_pred <- select(diamonds, -price, -y, -z, -depth, -table)
+price_pred <- dplyr::select(diamonds, -price, -y, -z, -depth, -table)
+
+# Create a pairwise scatter plot of the columns in price_pred
+pairs(price_pred, col = 'dodgerblue')
+
+```
+
+From the plot above, it can be seen that carat and x may have linear relationship with each other. i.e. Chance of being Collinear.
+
+### VIF
+
+```{r, echo=FALSE, eval=TRUE}
+library(faraway)
+
+vif(refined_model)
+```
+
+Here, We can see that, carat and x has the VIF greater than 5, i.e. 14.64 and 14.51 respectively, which strongly shows collinearity.
+
+### The Condition Number and the condition indices
+
+```{r, echo=FALSE, eval=TRUE}
+library(olsrr)
+
+round(ols_eigen_cindex(refined_model)[, 1:2], 4)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+ols_eigen_cindex(refined_model)
+```
+
+From the above data, it can be concluded that 78.1805 is the condition number and is the only greater than 30. So, we can conclude that only one linear dependence is likely causing most of the problem.
+
+It can also be observed that carat and x dominated the linear combination.
+
+### Solutions to Collinearity based on our Goal
+
+We are mainly focused on the prediction of diamonds price and collinearity is not the problem for prediction. So, we can ignore it. But, Explanation is always a good for regression analysis. So, let's check R2 of all of these model.
+
+```{r, echo=FALSE, eval=TRUE}
+#R2 value calculation
+#With carat and x in model(same model as before)
+
+print('R2 value For Refined Model:')
+summary(refined_model)$adj.r.squared
+print('RMSE value For Refined Model:')
+calc_loocv_rmse(refined_model)
+
+print('R2 value For Model without carat as predictor:')
+#Model without carat as predictor
+model_with_carat_removed = lm(price ~ color+clarity+x, 
+               data = refined_data)
+summary(model_with_carat_removed)$adj.r.squared
+print('RMSE value For Model without carat as predictor:')
+calc_loocv_rmse(model_with_carat_removed)
+
+print('R2 value For Model without x as predictor:')
+#Model without x as predictor
+model_with_x_removed = lm(price ~ carat+color+clarity, 
+               data = refined_data)
+
+summary(model_with_x_removed)$adj.r.squared
+print('RMSE value For Model without x as predictor:')
+calc_loocv_rmse(model_with_x_removed)
+```
+
+To Sum Up, Based on the R2 Value and RMSE, Model without "x" predictor performs better for prediction. Therefore, Model after collinearity now included: carat, color, and clarity as the predictors.
+
+## WLS
+
+Now, we'll create a weighted least squares model. We assume errors are independent since data aren't aren't taken over time.
+
+**OLS**
+
+```{r, echo=FALSE, eval=TRUE}
+library(olsrr)
+
+# fit the model using OLS
+model_ols = lm(price ~ . -x-y-z-table-depth, data = diamonds)
+
+summary(model_ols)
+
+# fitted-vs-residuals plot
+ols_plot_resid_fit(model_ols)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+library(lmtest)
+
+bptest(model_ols)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+# fit the OLS model of |e_i| ~ predictors. 
+# NOTE: Remember to remove the response!
+model_wts = lm(abs(resid(model_ols)) ~ carat+color+clarity, data = diamonds)
+
+# extract the coefficient estimates.
+coef(model_wts)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+# calculate the weights as 1 / (fitted values)^2
+weights = 1 / fitted(model_wts)^2
+
+# run WLS
+model_wls = lm(price ~ ., data = diamonds, weights = weights)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+plot(fitted(model_wls), weighted.residuals(model_wls), 
+     pch = 20, xlab = 'Fitted Value', ylab = 'Weighted Residual')
+
+abline(h=0, lwd=3, col='steelblue')
+```
+
+```{r, echo=FALSE, eval=TRUE}
+par(mfrow = c(1, 2))
+
+# OLS fitted-vs-residual plot
+plot(fitted(model_ols), resid(model_ols), 
+     pch = 20, ylim = c(-10, 15),
+     xlab = 'Fitted Value', ylab = 'Residual')
+
+abline(h=0, lwd=3, col='steelblue')
+
+# WLS fitted-vs-residual plot
+plot(fitted(model_wls), weighted.residuals(model_wls), 
+     pch = 20, ylim = c(-10, 15),
+     xlab = 'Fitted Value', ylab = 'Weighted Residual')
+
+abline(h=0, lwd=3, col='steelblue')
+```
+
+From this plot, we see that the WLS looks much better. The difference in the spread between small and large fitted values is smaller.
+
+### **Violations check after WLS**
+
+```{r, echo=FALSE, eval=TRUE}
+library(lmtest)
+bptest(model_wls)
+shapiro.test(resid(model_wls))
+
+ols_plot_resid_fit(model_wls)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+library(faraway)
+
+vif(model_wls)
+```
+
+### **Note:**
+
+Result of the BP Test shows that the p-value of the WLS Model is 1 which means that the constant variance assumption is not violated. Getting the p-value =1 is rare, so we decided to visually check the Constant Variance assumptions whether it is violated or not and on checking, we can easily say that, the constant variance assumptions is violated. So, we can say that if there are categorical predictors are in the model, it is better to check constant variance assumptions by Fitted Vs Residual Plot.
+
+Similarly, For Normality test, it is always better to check by Q-Q Plot if the model have 1 or more categorical predictors.
+
+To Sum Up, There's still Normality and Constant Variance Violations.
+
+## Transformation
+
+As seen before, we have a model with the data where errors vioates constant variance and normality assumptions.
+
+```{r, echo=FALSE, eval=TRUE}
+library(faraway)
+#let's take this model decided after removing x because of collinearity
+model <- lm(price ~ carat+color+clarity, data = diamonds)
+
+```
+
+```{r, echo=FALSE, eval=TRUE}
+library(MASS)
+bc = boxcox(model, lambda = seq(-0.25, 0.75, by = 0.05), plotit = TRUE)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+bc$x[which.max(bc$y)]
+```
+
+**Value of *lamda* can be taken 0.386 (nearly equal to 0.3863636)**
+
+```{r, echo=FALSE, eval=TRUE}
+get_lambda_ci = function(bc, level = 0.95) {
+    # lambda such that 
+    # L(lambda) > L(hat(lambda)) - 0.5 chisq_{1, alpha}
+    CI_values = bc$x[bc$y > max(bc$y) - qchisq(level, 1)/2]
+    
+    # 95 % CI 
+    CI <- range(CI_values) 
+    
+    # label the columns of the CI
+    names(CI) <- c("lower bound","upper bound")
+    
+    CI
+}
+
+# extract the 95% CI from the box cox object
+get_lambda_ci(bc)
+```
+
+In this case, the 95% CI is (0.366, 0.417), which clearly contains 0.386.
+
+```{r, echo=FALSE, eval=TRUE}
+model_bc = lm(price ^ 0.54 ~ color+clarity+carat, data = diamonds )
+
+summary(model_bc)
+```
+
+```{r, echo=FALSE, eval=TRUE}
+library(lmtest)
+shapiro.test(resid(model_bc))
+bptest(model_bc)
+
+ols_plot_resid_fit(model_bc)
+ols_plot_resid_qq(model_fix)
+```
+
+We can say from the both of the plot that the violations still exist. So, Now we need to do predictor transformation to see if we could get model that follows LINE assumptions.
+
+### Predictor Transformations
+
+#### ***Log Transformation of predictor***
+
+```{r, echo=FALSE, eval=TRUE}
+# Fit a linear regression model with logged response and predictor variables
+model_pt <- lm(log(price) ~ log(carat) + color + clarity, data = diamonds)
+
+# Print the summary of the model
+summary(model_pt)
+
+# Shapiro-Wilk test for normality of residuals
+# Note: This might not work directly with models including categorical variables
+shapiro.test(resid(model_pt))
+#so we are ignoring it
+
+
+# Breusch-Pagan test for heteroscedasticity (if applicable)
+# Note: This might not work directly with models including categorical variables
+library(lmtest)
+bptest(model_pt)
+#so we are ignoring it
+
+ols_plot_resid_fit(model_pt)
+
+ols_plot_resid_qq(model_pt)
+```
+
+From above plots, we can say that errors nearly follows constant variation assumptions. The deviation can be seen in the Q-Q Plot, at the end of the points i.e Normality violations and High Influential points may cause such type of violations. So, Checking for it.
+
+```{r, echo=FALSE, eval=TRUE}
+
+print("high Influential Points")
+
+high_inf_ids = which(cooks.distance(model_pt) > 4 /length(resid(model_pt)))
+```
+
+```{r, echo=FALSE, eval=TRUE}
+non_inf_ids = which(cooks.distance(model_pt) <= 4/length(resid(model_pt)))
+
+
+#Now, Creating a model model_log which, is the model with all the high influential points removed, plot looks good than before.
+model_log = lm(log(price) ~ log(carat) + color + clarity, data = diamonds, subset = non_inf_ids)
+
+summary(model_log)
+
+library(lmtest)
+bptest(model_log)
+
+shapiro.test(resid(model_log))
+
+ols_plot_resid_fit(model_log)
+
+ols_plot_resid_qq(model_log)
+
+nobs(model_log)
+```
+
+From the above Fitted Vs Residual Plot and Q-Q Plot, we can say that Line Assumptions are not violated. We are here getting little less p-value than required to accept the null hypothesis for Shapiro-Wilk test and BP test, because these tests aren't ideal to check Normality and Equal Variance violation when there is any Categorical predictor present in the model.
+
+## Final Model
+
+Our Final model is given by:
+
+```{r, echo=FALSE, eval=TRUE}
+model_log = lm(log(price) ~ log(carat) + color + clarity, data = diamonds, subset = non_inf_ids)
+summary(model_log)
+
+#LOOCV_RMSE
+calc_loocv_rmse(model_log)
+
+#RMSE
+mse <- mean(resid(model_log)^2)
+rmse <- sqrt(mse)
+rmse
+```
+
+The LOOCV-RMSE Value of this model is 0.1344318.
+
+```{r, echo=FALSE, eval=TRUE}
+vif(model_log)
+```
+
+Therefore, There is no collinearity issues. Note, We already addressed Collinearity issues before.
